@@ -1,6 +1,6 @@
-const httpStatus = require('http-status-codes').StatusCodes;
+const httpStatus = require("http-status-codes").StatusCodes;
 
-const { User, validateUser } = require('../models/user.model');
+const { User, validateUser } = require("../models/user.model");
 
 const userController = {
   register: async (req, res) => {
@@ -19,11 +19,11 @@ const userController = {
     const existingUser = await User.findOne({ where: { email } });
 
     if (existingUser) {
-      console.warn('User already registered');
+      console.warn("User already registered");
 
       return res
         .status(httpStatus.CONFLICT)
-        .json({ error: 'User already registered' });
+        .json({ error: "User already registered" });
     }
 
     const newUser = await User.create({
@@ -37,7 +37,7 @@ const userController = {
     });
 
     res.status(httpStatus.CREATED).json({
-      message: 'User registered successfully!',
+      message: "User registered successfully!",
       user: newUser.toSafeObject(),
     });
   },
@@ -46,37 +46,36 @@ const userController = {
     const user = await User.findByPk(req.user.id);
 
     if (!user) {
-      console.warn('User not found');
+      console.warn("User not found");
 
-      return res.status(httpStatus.NOT_FOUND).json({ error: 'User not found' });
+      return res.status(httpStatus.NOT_FOUND).json({ error: "User not found" });
     }
 
     res.status(httpStatus.OK).json(user.toSafeObject());
   },
 
   updateMyUser: async (req, res) => {
-    const { name, email, company, region, city } = req.body;
+    const { email, company, region, city } = req.body;
 
     const user = await User.findByPk(req.user.id);
 
     if (!user) {
-      console.warn('User not found');
+      console.warn("User not found");
 
-      return res.status(httpStatus.NOT_FOUND).json({ error: 'User not found' });
+      return res.status(httpStatus.NOT_FOUND).json({ error: "User not found" });
     }
 
     if (email && email !== user.email) {
       const existingUser = await User.findOne({ where: { email } });
 
       if (existingUser) {
-        console.warn('Email is already in use');
+        console.warn("Email is already in use");
         return res
           .status(httpStatus.CONFLICT)
-          .json({ error: 'Email is already in use' });
+          .json({ error: "Email is already in use" });
       }
     }
 
-    if (name) user.name = name;
     if (email) user.email = email;
     if (company) user.company = company;
     if (region) user.region = region;
@@ -85,7 +84,7 @@ const userController = {
     await user.save();
 
     res.status(httpStatus.OK).json({
-      message: 'User updated successfully',
+      message: "User updated successfully",
       updatedUser: user.toSafeObject(),
     });
   },
@@ -94,15 +93,15 @@ const userController = {
     const user = await User.findByPk(req.user.id);
 
     if (!user) {
-      console.warn('User not found');
+      console.warn("User not found");
 
-      return res.status(httpStatus.NOT_FOUND).json({ error: 'User not found' });
+      return res.status(httpStatus.NOT_FOUND).json({ error: "User not found" });
     }
 
     await user.destroy();
 
     res.status(httpStatus.OK).json({
-      message: 'User deleted successfully',
+      message: "User deleted successfully",
     });
   },
 };

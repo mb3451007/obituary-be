@@ -1,9 +1,9 @@
-const express = require('express');
-const multer = require('multer');
-const authenticationMiddleware = require('../middlewares/authentication');
+const express = require("express");
+const multer = require("multer");
+const authenticationMiddleware = require("../middlewares/authentication");
 
 const router = express.Router();
-const obituaryController = require('../controllers/obituary.controller');
+const obituaryController = require("../controllers/obituary.controller");
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -12,21 +12,21 @@ const upload = multer({
 });
 
 const uploadFields = upload.fields([
-  { name: 'picture', maxCount: 1 },
-  { name: 'deathReport', maxCount: 1 },
+  { name: "picture", maxCount: 1 },
+  { name: "deathReport", maxCount: 1 },
 ]);
 
 router.post(
-  '/',
+  "/",
   [authenticationMiddleware, uploadFields],
   obituaryController.createObituary
 );
-router.get('/', obituaryController.getObituary);
+router.get("/", obituaryController.getObituary);
 router.patch(
-  '/:id',
+  "/:id",
   [authenticationMiddleware, uploadFields],
   obituaryController.updateObituary
 );
-router.patch('/visits/:id', obituaryController.updateVisitCounts);
+router.patch("/visits/:id", obituaryController.updateVisitCounts);
 
 module.exports = router;

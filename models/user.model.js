@@ -1,9 +1,9 @@
-const { DataTypes, Model } = require('sequelize');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-const Joi = require('joi');
+const { DataTypes, Model } = require("sequelize");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const Joi = require("joi");
 
-const { sequelize } = require('../startup/db');
+const { sequelize } = require("../startup/db");
 
 class User extends Model {
   toSafeObject() {
@@ -42,7 +42,7 @@ User.init(
     },
     name: {
       type: DataTypes.STRING(100),
-      allowNull: false,
+      allowNull: true,
     },
     email: {
       type: DataTypes.STRING(100),
@@ -90,8 +90,8 @@ User.init(
   },
   {
     sequelize,
-    modelName: 'User',
-    tableName: 'users',
+    modelName: "User",
+    tableName: "users",
     timestamps: false,
   }
 );
@@ -131,12 +131,12 @@ function generateRefreshToken(user) {
 
 function validateUser(user) {
   const userSchema = Joi.object({
-    name: Joi.string().max(100).required(),
+    name: Joi.string().max(100).optional().allow(null, ""),
     email: Joi.string().email().max(100).required(),
     password: Joi.string().required(),
-    company: Joi.string().max(100).optional().allow(null, ''),
-    region: Joi.string().max(100).optional().allow(null, ''),
-    city: Joi.string().max(100).optional().allow(null, ''),
+    company: Joi.string().max(100).optional().allow(null, ""),
+    region: Joi.string().max(100).optional().allow(null, ""),
+    city: Joi.string().max(100).optional().allow(null, ""),
     role: Joi.string()
       .valid(
         process.env.USER_ROLE,

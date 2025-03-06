@@ -1,7 +1,7 @@
-const { Model, DataTypes } = require('sequelize');
-const Joi = require('joi');
+const { Model, DataTypes } = require("sequelize");
+const Joi = require("joi");
 
-const { sequelize } = require('../startup/db');
+const { sequelize } = require("../startup/db");
 
 class Obituary extends Model {}
 
@@ -18,11 +18,11 @@ Obituary.init(
       allowNull: false,
       unique: true,
       references: {
-        model: 'users',
-        key: 'id',
+        model: "users",
+        key: "id",
       },
-      onDelete: 'CASCADE',
-      onUpdate: 'RESTRICT',
+      onDelete: "CASCADE",
+      onUpdate: "RESTRICT",
     },
     name: {
       type: DataTypes.STRING(100),
@@ -45,9 +45,9 @@ Obituary.init(
       allowNull: false,
     },
     gender: {
-      type: DataTypes.ENUM('Male', 'Female'),
+      type: DataTypes.ENUM("Male", "Female"),
       allowNull: false,
-      defaultValue: 'Male',
+      defaultValue: "Male",
     },
     birthDate: {
       type: DataTypes.DATEONLY,
@@ -131,8 +131,8 @@ Obituary.init(
   },
   {
     sequelize,
-    modelName: 'Obituary',
-    tableName: 'obituaries',
+    modelName: "Obituary",
+    tableName: "obituaries",
     timestamps: false,
   }
 );
@@ -144,16 +144,16 @@ const validateObituary = (obituary) => {
     location: Joi.string().max(100).required(),
     region: Joi.string().max(100).required(),
     city: Joi.string().max(100).required(),
-    gender: Joi.string().valid('Male', 'Female').default('Male').required(),
+    gender: Joi.string().valid("Male", "Female").default("Male").required(),
     birthDate: Joi.date().required(),
     deathDate: Joi.date().required(),
     picture: Joi.any(),
-    funeralLocation: Joi.string().max(100).allow(null, '').optional(),
-    funeralCemetery: Joi.string().max(100).allow(null, '').optional(),
-    funeralTimestamp: Joi.date().allow(null, '').optional(),
+    funeralLocation: Joi.string().max(100).allow(null, "").optional(),
+    funeralCemetery: Joi.string().max(100).allow(null, "").optional(),
+    funeralTimestamp: Joi.date().allow(null, "").optional(),
     events: Joi.any().optional(),
     deathReportExists: Joi.boolean().required(),
-    deathReport: Joi.any().allow(null, '').optional(),
+    deathReport: Joi.any().allow(null, "").optional(),
     obituary: Joi.string().required(),
   });
 

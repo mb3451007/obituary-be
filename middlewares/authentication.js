@@ -1,20 +1,20 @@
-const httpStatus = require('http-status-codes').StatusCodes;
-const jwt = require('jsonwebtoken');
-const { Op } = require('sequelize');
+const httpStatus = require("http-status-codes").StatusCodes;
+const jwt = require("jsonwebtoken");
+const { Op } = require("sequelize");
 
-const { RefreshToken } = require('../models/refreshToken.model');
-const { setAccessToken } = require('../helpers/responseToken');
-const { User } = require('../models/user.model');
+const { RefreshToken } = require("../models/refreshToken.model");
+const { setAccessToken } = require("../helpers/responseToken");
+const { User } = require("../models/user.model");
 
 async function verifyUser(id) {
   const user = await User.findByPk(id);
 
   if (!user) {
-    console.warn('Access denied. User not found');
+    console.warn("Access denied. User not found");
 
     return {
       success: false,
-      error: 'Access denied. User not found',
+      error: "Access denied. User not found",
     };
   }
 
@@ -25,15 +25,15 @@ async function verifyUser(id) {
 }
 
 module.exports = async (req, res, next) => {
-  const accessToken = req.header('access-token');
-  const refreshToken = req.header('refresh-token');
+  const accessToken = req.header("access-token");
+  const refreshToken = req.header("refresh-token");
 
   if (!accessToken && !refreshToken) {
-    console.warn('Access denied. No token provided');
+    console.warn("Access denied. No token provided");
 
     return res
       .status(httpStatus.UNAUTHORIZED)
-      .json({ error: 'Access denied. No token provided' });
+      .json({ error: "Access denied. No token provided" });
   }
 
   let response;
@@ -75,10 +75,10 @@ module.exports = async (req, res, next) => {
       });
 
       if (!validRefreshToken) {
-        console.warn('Access denied. Refresh token not found or has expired');
+        console.warn("Access denied. Refresh token not found or has expired");
 
         return res.status(httpStatus.UNAUTHORIZED).json({
-          error: 'Access denied. Refresh token not found or has expired',
+          error: "Access denied. Refresh token not found or has expired",
         });
       }
 
@@ -101,5 +101,5 @@ module.exports = async (req, res, next) => {
 
   res
     .status(httpStatus.UNAUTHORIZED)
-    .json({ error: 'Access denied. Invalid token(s)' });
+    .json({ error: "Access denied. Invalid token(s)" });
 };
