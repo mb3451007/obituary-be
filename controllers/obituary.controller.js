@@ -40,6 +40,7 @@ const obituaryController = {
 
     const existingObituary = await Obituary.findOne({
       where: {
+        userId: req.user.id,
         name,
         sirName,
         deathDate,
@@ -58,6 +59,7 @@ const obituaryController = {
     }
 
     const newObituary = await Obituary.create({
+      userId: req.user.id,
       name,
       sirName,
       location,
@@ -69,10 +71,7 @@ const obituaryController = {
       funeralLocation,
       funeralCemetery,
       funeralTimestamp: funeralTimestamp || null,
-      // events: JSON.parse(events || "[]"),
-      //to be changed
-      events: typeof events === "string" ? JSON.parse(events) : events,
-
+      events: JSON.parse(events || "[]"),
       deathReportExists,
       obituary,
       symbol,
