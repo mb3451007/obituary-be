@@ -22,6 +22,7 @@ router.post(
   obituaryController.createObituary
 );
 router.get("/", obituaryController.getObituary);
+router.get("/funerals", obituaryController.getFunerals);
 router.patch(
   "/:id",
   [authenticationMiddleware, uploadFields],

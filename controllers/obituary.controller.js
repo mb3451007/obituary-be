@@ -2,6 +2,7 @@ const httpStatus = require("http-status-codes").StatusCodes;
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
+const { Op } = require("sequelize");
 
 const { Obituary, validateObituary } = require("../models/obituary.model");
 const { User } = require("../models/user.model");
@@ -71,7 +72,7 @@ const obituaryController = {
       funeralLocation,
       funeralCemetery,
       funeralTimestamp: funeralTimestamp || null,
-      events: JSON.parse(events || "[]"),
+      events: events || "[]",
       deathReportExists,
       obituary,
       symbol,
@@ -154,6 +155,43 @@ const obituaryController = {
       total: obituaries.count,
       page: parseInt(page, 10),
       limit: parseInt(limit, 10),
+      obituaries: obituaries.rows,
+    });
+  },
+
+  getFunerals: async (req, res) => {
+    const { id, startDate, endDate, region, city } = req.query;
+
+    const whereClause = {};
+
+    if (id) whereClause.id = id;
+
+    if (city) {
+      whereClause.city = city;
+    }
+    if (region) {
+      whereClause.region = region;
+    }
+    if (startDate && endDate) {
+      whereClause.funeralTimestamp = {
+        [Op.between]: [new Date(startDate), new Date(endDate)],
+      };
+    }
+
+    const obituaries = await Obituary.findAndCountAll({
+      where: whereClause,
+
+      order: [["funeralTimestamp"]],
+      include: [
+        {
+          model: User,
+        },
+      ],
+    });
+
+    res.status(httpStatus.OK).json({
+      total: obituaries.count,
+
       obituaries: obituaries.rows,
     });
   },
