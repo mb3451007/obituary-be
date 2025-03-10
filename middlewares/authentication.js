@@ -30,10 +30,10 @@ module.exports = async (req, res, next) => {
 
   if (!accessToken && !refreshToken) {
     console.warn("Access denied. No token provided");
-
-    return res
-      .status(httpStatus.UNAUTHORIZED)
-      .json({ error: "Access denied. No token provided" });
+    return next();
+    // return res
+    //   .status(httpStatus.UNAUTHORIZED)
+    //   .json({ error: "Access denied. No token provided" });
   }
 
   let response;

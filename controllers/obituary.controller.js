@@ -11,6 +11,7 @@ const OBITUARY_UPLOADS_PATH = path.join(__dirname, "../obituaryUploads");
 
 const obituaryController = {
   createObituary: async (req, res) => {
+    console.log("here0--------------");
     const {
       name,
       sirName,
@@ -41,7 +42,6 @@ const obituaryController = {
 
     const existingObituary = await Obituary.findOne({
       where: {
-        userId: req.user.id,
         name,
         sirName,
         deathDate,
@@ -60,7 +60,6 @@ const obituaryController = {
     }
 
     const newObituary = await Obituary.create({
-      userId: req.user.id,
       name,
       sirName,
       location,
@@ -177,7 +176,7 @@ const obituaryController = {
         [Op.between]: [new Date(startDate), new Date(endDate)],
       };
     }
-
+    console.log(city, whereClause);
     const obituaries = await Obituary.findAndCountAll({
       where: whereClause,
 
