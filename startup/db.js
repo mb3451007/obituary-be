@@ -1,5 +1,5 @@
-const { Sequelize } = require('sequelize');
-require('dotenv').config();
+const { Sequelize } = require("sequelize");
+require("dotenv").config();
 
 const sequelize = new Sequelize(
   process.env.DB_DATABASE,
@@ -16,10 +16,10 @@ const connectToDB = () => {
   sequelize
     .sync({ force: false })
     .then(() => {
-      console.log('Database and tables synced');
+      console.log("Database and tables synced");
     })
     .catch((error) => {
-      console.error('Error syncing database:', error);
+      console.error("Error syncing database:", error);
       process.exit(1);
     });
 };

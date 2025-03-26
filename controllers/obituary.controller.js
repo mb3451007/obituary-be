@@ -6,12 +6,15 @@ const { Op } = require("sequelize");
 
 const { Obituary, validateObituary } = require("../models/obituary.model");
 const { User } = require("../models/user.model");
-
+const { Keeper } = require("../models/keeper.model");
+const { SorrowBook } = require("../models/sorrow_book.model");
+const { Dedication } = require("../models/dedication.model");
+const { Photo } = require("../models/photo.model");
+const { Condolence } = require("../models/condolence.model");
 const OBITUARY_UPLOADS_PATH = path.join(__dirname, "../obituaryUploads");
 
 const obituaryController = {
   createObituary: async (req, res) => {
-    console.log("here0--------------");
     const {
       name,
       sirName,
@@ -71,7 +74,7 @@ const obituaryController = {
       funeralLocation,
       funeralCemetery,
       funeralTimestamp: funeralTimestamp || null,
-      events: events || "[]",
+      events: JSON.parse(events || "[]"),
       deathReportExists,
       obituary,
       symbol,
@@ -158,6 +161,50 @@ const obituaryController = {
     });
   },
 
+  getMemory: async (req, res) => {
+    const { id } = req.query;
+
+    const obituary = await Obituary.findOne({
+      where: { id: id },
+      include: [
+        {
+          model: User,
+        },
+        {
+          model: Keeper,
+        },
+        {
+          model: SorrowBook,
+        },
+        {
+          model: Dedication,
+          where: { status: "approved" },
+          required: false,
+        },
+        {
+          model: Photo,
+          where: { status: "approved" },
+          required: false,
+        },
+        {
+          model: Condolence,
+          where: { status: "approved" },
+          required: false,
+        },
+      ],
+    });
+
+    if (!obituary) {
+      return res
+        .status(httpStatus.NOT_FOUND)
+        .json({ error: "Memory not found" });
+    }
+
+    res.status(httpStatus.OK).json({
+      obituary,
+    });
+  },
+
   getFunerals: async (req, res) => {
     const { id, startDate, endDate, region, city } = req.query;
 
@@ -197,7 +244,7 @@ const obituaryController = {
 
   updateObituary: async (req, res) => {
     const obituaryId = req.params.id;
-
+    console.log(req.body);
     const existingObituary = await Obituary.findByPk(obituaryId);
 
     if (!existingObituary) {
@@ -264,6 +311,7 @@ const obituaryController = {
       fieldsToUpdate.sirName = req.body.sirName;
     if (req.body.location !== undefined)
       fieldsToUpdate.location = req.body.location;
+
     if (req.body.region !== undefined) fieldsToUpdate.region = req.body.region;
     if (req.body.city !== undefined) fieldsToUpdate.city = req.body.city;
     if (req.body.gender !== undefined) fieldsToUpdate.gender = req.body.gender;
@@ -277,8 +325,10 @@ const obituaryController = {
       fieldsToUpdate.funeralCemetery = req.body.funeralCemetery;
     if (req.body.funeralTimestamp !== undefined)
       fieldsToUpdate.funeralTimestamp = req.body.funeralTimestamp;
+    if (req.body.verse !== undefined) fieldsToUpdate.verse = req.body.verse;
     if (req.body.events !== undefined)
       fieldsToUpdate.events = JSON.parse(req.body.events);
+
     if (req.body.deathReportExists !== undefined)
       fieldsToUpdate.deathReportExists = req.body.deathReportExists;
     if (req.body.obituary !== undefined)
@@ -296,62 +346,129 @@ const obituaryController = {
 
     res.status(httpStatus.OK).json(existingObituary);
   },
+  //old
+  // updateVisitCounts: async (req, res) => {
+  //   const obituaryId = req.params.id;
 
+  //   const obituary = await Obituary.findByPk(obituaryId);
+
+  //   if (!obituary) {
+  //     console.warn("Obituary not found");
+
+  //     return res
+  //       .status(httpStatus.NOT_FOUND)
+  //       .json({ error: "Obituary not found" });
+  //   }
+
+  //   const currentTimestamp = new Date();
+
+  //   const startOfWeek = new Date();
+  //   const day = startOfWeek.getDay();
+  //   const diff = day === 0 ? 6 : day - 1;
+  //   startOfWeek.setDate(startOfWeek.getDate() - diff);
+  //   startOfWeek.setHours(0, 0, 0, 0);
+
+  //   let updatedCurrentWeekVisits = obituary.currentWeekVisits;
+
+  //   if (
+  //     !obituary.lastWeeklyReset ||
+  //     new Date(obituary.lastWeeklyReset) < startOfWeek
+  //   ) {
+  //     await Obituary.update(
+  //       {
+  //         currentWeekVisits: 0,
+  //         lastWeeklyReset: currentTimestamp,
+  //       },
+  //       { where: { id: obituaryId } }
+  //     );
+
+  //     updatedCurrentWeekVisits = 0;
+  //   }
+
+  //   await Obituary.update(
+  //     {
+  //       totalVisits: obituary.totalVisits + 1,
+  //       currentWeekVisits: updatedCurrentWeekVisits + 1,
+  //     },
+  //     { where: { id: obituaryId } }
+  //   );
+
+  //   const updatedObituary = await Obituary.findByPk(obituaryId, {
+  //     include: [
+  //       {
+  //         model: User,
+  //       },
+  //     ],
+  //   });
+
+  //   res.status(httpStatus.OK).json(updatedObituary);
+  // },
   updateVisitCounts: async (req, res) => {
-    const obituaryId = req.params.id;
+    try {
+      const { id: obituaryId } = req.params;
+      const currentTimestamp = new Date();
 
-    const obituary = await Obituary.findByPk(obituaryId);
+      const obituary = await Obituary.findByPk(obituaryId, {
+        include: [
+          User,
+          Keeper,
+          SorrowBook,
+          {
+            model: Dedication,
+            where: { status: "approved" },
+            required: false,
+          },
+          {
+            model: Photo,
+            where: { status: "approved" },
+            required: false,
+          },
+          {
+            model: Condolence,
+            where: { status: "approved" },
+            required: false,
+          },
+        ],
+      });
+      if (!obituary) {
+        console.warn("Obituary not found");
+        return res
+          .status(httpStatus.NOT_FOUND)
+          .json({ error: "Obituary not found" });
+      }
 
-    if (!obituary) {
-      console.warn("Obituary not found");
+      // Calculate the start of the current week (Monday)
+      const startOfWeek = new Date();
+      startOfWeek.setDate(
+        startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7)
+      );
+      startOfWeek.setHours(0, 0, 0, 0);
 
-      return res
-        .status(httpStatus.NOT_FOUND)
-        .json({ error: "Obituary not found" });
-    }
-
-    const currentTimestamp = new Date();
-
-    const startOfWeek = new Date();
-    const day = startOfWeek.getDay();
-    const diff = day === 0 ? 6 : day - 1;
-    startOfWeek.setDate(startOfWeek.getDate() - diff);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    let updatedCurrentWeekVisits = obituary.currentWeekVisits;
-
-    if (
-      !obituary.lastWeeklyReset ||
-      new Date(obituary.lastWeeklyReset) < startOfWeek
-    ) {
-      await Obituary.update(
-        {
+      let updatedCurrentWeekVisits = obituary.currentWeekVisits;
+      if (
+        !obituary.lastWeeklyReset ||
+        new Date(obituary.lastWeeklyReset) < startOfWeek
+      ) {
+        await obituary.update({
           currentWeekVisits: 0,
           lastWeeklyReset: currentTimestamp,
-        },
-        { where: { id: obituaryId } }
-      );
+        });
+        updatedCurrentWeekVisits = 0;
+      }
 
-      updatedCurrentWeekVisits = 0;
-    }
-
-    await Obituary.update(
-      {
+      // Increment visit counts
+      await obituary.update({
         totalVisits: obituary.totalVisits + 1,
         currentWeekVisits: updatedCurrentWeekVisits + 1,
-      },
-      { where: { id: obituaryId } }
-    );
+      });
 
-    const updatedObituary = await Obituary.findByPk(obituaryId, {
-      include: [
-        {
-          model: User,
-        },
-      ],
-    });
-
-    res.status(httpStatus.OK).json(updatedObituary);
+      res.status(httpStatus.OK).json(obituary);
+    } catch (error) {
+      console.error("Error updating visit counts:", error);
+      res
+        .status(httpStatus.INTERNAL_SERVER_ERROR)
+        .json({ error: "An error occurred while updating visit counts" });
+    }
   },
 };
 

@@ -1,0 +1,60 @@
+const httpStatus = require("http-status-codes").StatusCodes;
+
+const { Op } = require("sequelize");
+
+const { User } = require("../models/user.model");
+const {
+  validateCondolence,
+  Condolence,
+} = require("../models/condolence.model");
+const memoryLogsController = require("./memoryLogs.controller");
+
+const condolenceController = {
+  createCondolence: async (req, res) => {
+    try {
+      const { name, message, relation, isCustomMessage } = req.body;
+      const userId = req.user.id;
+      const obituaryId = req.params.id;
+      const { error } = validateCondolence(req.body);
+
+      if (error) {
+        console.warn(`Invalid data format: ${error}`);
+
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json({ error: `Invalid data format: ${error}` });
+      }
+
+      const condolence = await Condolence.create({
+        name,
+        message,
+        relation,
+        isCustomMessage,
+        userId,
+        obituaryId,
+        status: isCustomMessage === true ? "pending" : "approved",
+      });
+      if (condolence) {
+        try {
+          await memoryLogsController.createLog(
+            "condolence",
+            obituaryId,
+            userId,
+            condolence.id,
+            condolence.status
+          );
+        } catch (logError) {
+          console.error("Error creating memory log:", logError);
+        }
+      }
+      res.status(httpStatus.CREATED).json(condolence);
+    } catch (error) {
+      console.error("Error creating condolence:", error);
+      res
+        .status(httpStatus.INTERNAL_SERVER_ERROR)
+        .json({ error: "Something went wrong" });
+    }
+  },
+};
+
+module.exports = condolenceController;

@@ -24,6 +24,7 @@ Obituary.init(
     //   onDelete: "CASCADE",
     //   onUpdate: "RESTRICT",
     // },
+
     name: {
       type: DataTypes.STRING(100),
       allowNull: false,

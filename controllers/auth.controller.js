@@ -1,10 +1,10 @@
-const httpStatus = require('http-status-codes').StatusCodes;
-const bcrypt = require('bcrypt');
+const httpStatus = require("http-status-codes").StatusCodes;
+const bcrypt = require("bcrypt");
 
-const { User } = require('../models/user.model');
-const Auth = require('../models/auth.model');
-const { RefreshToken } = require('../models/refreshToken.model');
-const responseToken = require('../helpers/responseToken');
+const { User } = require("../models/user.model");
+const Auth = require("../models/auth.model");
+const { RefreshToken } = require("../models/refreshToken.model");
+const responseToken = require("../helpers/responseToken");
 
 const authController = {
   login: async (req, res) => {
@@ -27,28 +27,28 @@ const authController = {
     });
 
     if (!user) {
-      console.warn('Invalid email or password');
+      console.warn("Invalid email or password");
 
       return res
         .status(httpStatus.UNAUTHORIZED)
-        .json({ error: 'Invalid email or password' });
+        .json({ error: "Invalid Email" });
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
-      console.warn('Invalid email or password');
+      console.warn("Invalid Password");
 
       return res
         .status(httpStatus.UNAUTHORIZED)
-        .json({ error: 'Invalid email or password' });
+        .json({ error: "Invalid   password" });
     }
 
     responseToken.setAccessToken(user, res);
     await responseToken.setRefreshToken(user, res);
 
     res.status(httpStatus.OK).json({
-      message: 'Login Successful!',
+      message: "Login Successful!",
       user: user.toSafeObject(),
     });
   },
@@ -60,7 +60,7 @@ const authController = {
     );
 
     res.status(httpStatus.OK).json({
-      message: 'Logged out successfully!',
+      message: "Logged out successfully!",
     });
   },
 };

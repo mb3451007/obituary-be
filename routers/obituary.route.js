@@ -19,11 +19,13 @@ const uploadFields = upload.fields([
 router.post("/", [uploadFields], obituaryController.createObituary);
 router.get("/", obituaryController.getObituary);
 router.get("/funerals", obituaryController.getFunerals);
-router.patch(
-  "/:id",
-  [authenticationMiddleware, uploadFields],
-  obituaryController.updateObituary
-);
+router.get("/memory", obituaryController.getMemory); // for memory page
+// router.patch(
+//   "/:id",
+//   [authenticationMiddleware, uploadFields],
+//   obituaryController.updateObituary
+// );
+router.patch("/:id", [uploadFields], obituaryController.updateObituary);
 router.patch("/visits/:id", obituaryController.updateVisitCounts);
 
 module.exports = router;
