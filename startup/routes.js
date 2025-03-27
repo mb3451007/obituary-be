@@ -12,6 +12,8 @@ const photo = require("../routers/photo.route");
 const keeper = require("../routers/keeper.route");
 const error = require("../middlewares/error");
 const dedication = require("../routers/dedication.route");
+const candle = require("../routers/candle.route");
+const common = require("../routers/common.route");
 
 const corsOptions = {
   origin:
@@ -36,6 +38,8 @@ module.exports = (app) => {
   app.use("/api/sorrow-book", sorrow_book);
   app.use("/api/photo", photo);
   app.use("/api/dedication", dedication);
+  app.use("/api/candle", candle);
+  app.use("/api/post", common);
   app.use("/api/keeper", keeper);
   app.use(error);
 };

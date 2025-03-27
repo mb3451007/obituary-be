@@ -58,8 +58,8 @@ Candle.init(
   },
   {
     sequelize,
-    modelName: "Condolence",
-    tableName: "condolences",
+    modelName: "Candle",
+    tableName: "candles",
     timestamps: false,
   }
 );

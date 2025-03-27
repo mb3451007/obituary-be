@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
 const { Op } = require("sequelize");
+const { Sequelize } = require("sequelize");
 
 const { Obituary, validateObituary } = require("../models/obituary.model");
 const { User } = require("../models/user.model");
@@ -11,6 +12,8 @@ const { SorrowBook } = require("../models/sorrow_book.model");
 const { Dedication } = require("../models/dedication.model");
 const { Photo } = require("../models/photo.model");
 const { Condolence } = require("../models/condolence.model");
+const { Candle } = require("../models/candle.model");
+const { MemoryLog } = require("../models/memory_logs.model");
 const OBITUARY_UPLOADS_PATH = path.join(__dirname, "../obituaryUploads");
 
 const obituaryController = {
@@ -164,6 +167,8 @@ const obituaryController = {
   getMemory: async (req, res) => {
     const { id } = req.query;
 
+    const ipAddress =
+      req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress;
     const obituary = await Obituary.findOne({
       where: { id: id },
       include: [
@@ -191,7 +196,41 @@ const obituaryController = {
           where: { status: "approved" },
           required: false,
         },
+        {
+          model: Candle,
+          as: "candles",
+          attributes: [
+            [
+              Sequelize.fn("COUNT", Sequelize.col("candles.id")),
+              "totalCandles",
+            ],
+            [
+              Sequelize.literal(
+                "(SELECT `id` FROM `candles` WHERE `candles`.`obituaryId` = Obituary.id ORDER BY `createdTimestamp` DESC LIMIT 1)"
+              ),
+              "lastBurnedCandleId",
+            ],
+            [
+              Sequelize.literal(
+                "(SELECT `createdTimestamp` FROM `candles` WHERE `candles`.`obituaryId` = Obituary.id ORDER BY `createdTimestamp` DESC LIMIT 1)"
+              ),
+              "lastBurnedCandleTime",
+            ],
+            [
+              Sequelize.literal(
+                `(SELECT createdTimestamp FROM candles 
+                  WHERE candles.obituaryId = Obituary.id 
+                  AND ( candles.ipAddress = '${ipAddress}') 
+                  ORDER BY createdTimestamp DESC 
+                  LIMIT 1)`
+              ),
+              "myLastBurntCandleTime",
+            ],
+          ],
+          required: false,
+        },
       ],
+      group: ["Obituary.id"],
     });
 
     if (!obituary) {
@@ -406,6 +445,11 @@ const obituaryController = {
   updateVisitCounts: async (req, res) => {
     try {
       const { id: obituaryId } = req.params;
+
+      const ipAddress =
+        req.ip ||
+        req.headers["x-forwarded-for"] ||
+        req.connection.remoteAddress;
       const currentTimestamp = new Date();
 
       const obituary = await Obituary.findByPk(obituaryId, {
@@ -428,7 +472,41 @@ const obituaryController = {
             where: { status: "approved" },
             required: false,
           },
+          {
+            model: Candle,
+            as: "candles",
+            attributes: [
+              [
+                Sequelize.fn("COUNT", Sequelize.col("candles.id")),
+                "totalCandles",
+              ],
+              [
+                Sequelize.literal(
+                  "(SELECT `id` FROM `candles` WHERE `candles`.`obituaryId` = Obituary.id ORDER BY `createdTimestamp` DESC LIMIT 1)"
+                ),
+                "lastBurnedCandleId",
+              ],
+              [
+                Sequelize.literal(
+                  "(SELECT `createdTimestamp` FROM `candles` WHERE `candles`.`obituaryId` = Obituary.id ORDER BY `createdTimestamp` DESC LIMIT 1)"
+                ),
+                "lastBurnedCandleTime",
+              ],
+              [
+                Sequelize.literal(
+                  `(SELECT createdTimestamp FROM candles 
+                    WHERE candles.obituaryId = Obituary.id 
+                    AND (  candles.ipAddress = '${ipAddress}') 
+                    ORDER BY createdTimestamp DESC 
+                    LIMIT 1)`
+                ),
+                "myLastBurntCandleTime",
+              ],
+            ],
+            required: false,
+          },
         ],
+        group: ["Obituary.id"],
       });
       if (!obituary) {
         console.warn("Obituary not found");
@@ -468,6 +546,45 @@ const obituaryController = {
       res
         .status(httpStatus.INTERNAL_SERVER_ERROR)
         .json({ error: "An error occurred while updating visit counts" });
+    }
+  },
+
+  getPendingData: async (req, res) => {
+    try {
+      const keeperObituaries = await Keeper.findAll({
+        where: { userId: req.user.id },
+        attributes: ["obituaryId"],
+      });
+
+      if (!keeperObituaries.length) return [];
+
+      const obituaryIds = keeperObituaries.map((k) => k.obituaryId);
+
+      const interactions = await MemoryLog.findAll({
+        where: {
+          obituaryId: obituaryIds,
+          type: ["photo", "condolence", "dedication"],
+          status: "pending",
+        },
+        attributes: [
+          "id",
+          "interactionId",
+          "type",
+          "status",
+          "createdTimestamp",
+        ],
+        include: [
+          {
+            model: Obituary,
+            attributes: ["name", "sirName"],
+          },
+        ],
+      });
+
+      res.status(httpStatus.OK).json(interactions);
+    } catch (error) {
+      console.error("Error fetching interactions:", error);
+      return [];
     }
   },
 };

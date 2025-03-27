@@ -8,12 +8,16 @@ const { SorrowBook } = require("./sorrow_book.model");
 const { MemoryLog } = require("./memory_logs.model");
 const { Dedication } = require("./dedication.model");
 const { Condolence } = require("./condolence.model");
+const { Candle } = require("./candle.model");
 
 User.hasMany(RefreshToken, { foreignKey: "userId" });
 RefreshToken.belongsTo(User, { foreignKey: "userId" });
 
 Obituary.hasMany(Event, { foreignKey: "obituaryId" });
 Event.belongsTo(Obituary, { foreignKey: "obituaryId" });
+
+Obituary.hasMany(Candle, { foreignKey: "obituaryId", as: "candles" });
+Candle.belongsTo(Obituary, { foreignKey: "obituaryId", as: "obituary" });
 
 User.hasMany(SorrowBook, { foreignKey: "userId" });
 SorrowBook.belongsTo(User, { foreignKey: "userId" });

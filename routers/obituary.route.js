@@ -19,7 +19,13 @@ const uploadFields = upload.fields([
 router.post("/", [uploadFields], obituaryController.createObituary);
 router.get("/", obituaryController.getObituary);
 router.get("/funerals", obituaryController.getFunerals);
-router.get("/memory", obituaryController.getMemory); // for memory page
+router.get("/memory", obituaryController.getMemory);
+router.get(
+  "/pending-data",
+  [authenticationMiddleware],
+  obituaryController.getPendingData
+);
+// for memory page
 // router.patch(
 //   "/:id",
 //   [authenticationMiddleware, uploadFields],
