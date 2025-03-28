@@ -14,11 +14,12 @@ const dedicationController = {
   createDedication: async (req, res) => {
     try {
       console.log(req.body);
-      const { title, message, name } = req.body;
+      const { title, message, name, isKeeper } = req.body;
+
       const userId = req.user.id;
       const obituaryId = req.params.id;
-
-      const { error } = validateDedication(req.body);
+      const dedicationData = { title, message, name };
+      const { error } = validateDedication(dedicationData);
 
       if (error) {
         console.warn(`Invalid data format: ${error}`);
@@ -34,6 +35,7 @@ const dedicationController = {
         userId,
         obituaryId,
         name,
+        status: isKeeper ? "approved" : "pending",
       });
       if (dedication) {
         try {

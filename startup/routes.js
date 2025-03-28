@@ -14,6 +14,7 @@ const error = require("../middlewares/error");
 const dedication = require("../routers/dedication.route");
 const candle = require("../routers/candle.route");
 const common = require("../routers/common.route");
+const report = require("../routers/report.route");
 
 const corsOptions = {
   origin:
@@ -41,5 +42,6 @@ module.exports = (app) => {
   app.use("/api/candle", candle);
   app.use("/api/post", common);
   app.use("/api/keeper", keeper);
+  app.use("/api/report", report);
   app.use(error);
 };

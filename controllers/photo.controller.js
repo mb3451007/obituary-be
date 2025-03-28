@@ -15,6 +15,7 @@ const photoController = {
     try {
       const userId = req.user.id;
       const obituaryId = req.params.id;
+      const { isKeeper } = req.body;
       const obituaryFolder = path.join(
         OBITUARY_UPLOADS_PATH,
         String(obituaryId)
@@ -47,6 +48,7 @@ const photoController = {
         userId,
         obituaryId,
         fileUrl: picturePath,
+        status: isKeeper ? "approved" : "pending",
       });
       if (photo) {
         try {

@@ -14,7 +14,7 @@ const candleController = {
 
       const lastBurned = await Candle.findOne({
         where: {
-          [Op.or]: [{ userId: userId || null }, { ipAddress: ipAddress }],
+          [Op.or]: [{ ipAddress: ipAddress }],
           obituaryId: obituaryId,
           createdTimestamp: {
             [Op.gte]: moment().subtract(24, "hours").toDate(),

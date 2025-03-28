@@ -12,10 +12,11 @@ const memoryLogsController = require("./memoryLogs.controller");
 const condolenceController = {
   createCondolence: async (req, res) => {
     try {
-      const { name, message, relation, isCustomMessage } = req.body;
+      const { name, message, relation, isCustomMessage, isKeeper } = req.body;
       const userId = req.user.id;
       const obituaryId = req.params.id;
-      const { error } = validateCondolence(req.body);
+      const condolenceData = { name, message, relation, isCustomMessage };
+      const { error } = validateCondolence(condolenceData);
 
       if (error) {
         console.warn(`Invalid data format: ${error}`);
@@ -24,7 +25,11 @@ const condolenceController = {
           .status(httpStatus.BAD_REQUEST)
           .json({ error: `Invalid data format: ${error}` });
       }
-
+      const status = isKeeper
+        ? "approved"
+        : isCustomMessage
+        ? "pending"
+        : "approved";
       const condolence = await Condolence.create({
         name,
         message,
@@ -32,7 +37,7 @@ const condolenceController = {
         isCustomMessage,
         userId,
         obituaryId,
-        status: isCustomMessage === true ? "pending" : "approved",
+        status,
       });
       if (condolence) {
         try {
