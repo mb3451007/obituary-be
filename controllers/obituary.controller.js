@@ -4,6 +4,7 @@ const path = require("path");
 const sharp = require("sharp");
 const { Op } = require("sequelize");
 const { Sequelize } = require("sequelize");
+const { optimizeAndSaveImage } = require("../utils/imageOptimizer");
 
 const { Obituary, validateObituary } = require("../models/obituary.model");
 const { User } = require("../models/user.model");
@@ -167,8 +168,13 @@ const obituaryController = {
   getMemory: async (req, res) => {
     const { id } = req.query;
 
-    const ipAddress =
-      req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+    const ip =
+      req.headers["x-forwarded-for"]?.split(",")[0] ||
+      req.connection.remoteAddress ||
+      req.socket.remoteAddress ||
+      req.ip;
+
+    const ipAddress = ip.includes("::ffff:") ? ip.split("::ffff:")[1] : ip;
     const obituary = await Obituary.findOne({
       where: { id: id },
       include: [
@@ -185,16 +191,19 @@ const obituaryController = {
           model: Dedication,
           where: { status: "approved" },
           required: false,
+          limit: 1000,
         },
         {
           model: Photo,
           where: { status: "approved" },
           required: false,
+          limit: 1000,
         },
         {
           model: Condolence,
           where: { status: "approved" },
           required: false,
+          limit: 1000,
         },
         {
           model: Candle,
@@ -230,7 +239,7 @@ const obituaryController = {
           required: false,
         },
       ],
-      group: ["Obituary.id"],
+      // group: ["Obituary.id"],
     });
 
     if (!obituary) {
@@ -300,13 +309,29 @@ const obituaryController = {
 
     let picturePath = existingObituary.image;
     let deathReportPath = existingObituary.deathReport;
+    //old code
+    // if (req.files?.picture) {
+    //   picturePath = path.join(
+    //     "obituaryUploads",
+    //     String(obituaryId),
+    //     req.files.picture[0].originalname
+    //   );
+
+    //   if (
+    //     existingObituary.image &&
+    //     fs.existsSync(path.join(__dirname, "../", existingObituary.image))
+    //   ) {
+    //     fs.unlinkSync(path.join(__dirname, "../", existingObituary.image));
+    //   }
+
+    //   fs.writeFileSync(
+    //     path.join(__dirname, "../", picturePath),
+    //     req.files.picture[0].buffer
+    //   );
+    // }
 
     if (req.files?.picture) {
-      picturePath = path.join(
-        "obituaryUploads",
-        String(obituaryId),
-        req.files.picture[0].originalname
-      );
+      const pictureFile = req.files.picture[0];
 
       if (
         existingObituary.image &&
@@ -315,10 +340,11 @@ const obituaryController = {
         fs.unlinkSync(path.join(__dirname, "../", existingObituary.image));
       }
 
-      fs.writeFileSync(
-        path.join(__dirname, "../", picturePath),
-        req.files.picture[0].buffer
-      );
+      picturePath = await optimizeAndSaveImage({
+        file: pictureFile,
+        folder: "obituaryUploads",
+        obituaryId,
+      });
     }
 
     if (req.files?.deathReport) {
@@ -446,10 +472,13 @@ const obituaryController = {
     try {
       const { id: obituaryId } = req.params;
 
-      const ipAddress =
-        req.ip ||
-        req.headers["x-forwarded-for"] ||
-        req.connection.remoteAddress;
+      const ip =
+        req.headers["x-forwarded-for"]?.split(",")[0] ||
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress ||
+        req.ip;
+
+      const ipAddress = ip.includes("::ffff:") ? ip.split("::ffff:")[1] : ip;
       const currentTimestamp = new Date();
 
       const obituary = await Obituary.findByPk(obituaryId, {
@@ -461,16 +490,19 @@ const obituaryController = {
             model: Dedication,
             where: { status: "approved" },
             required: false,
+            limit: 1000,
           },
           {
             model: Photo,
             where: { status: "approved" },
             required: false,
+            limit: 1000,
           },
           {
             model: Condolence,
             where: { status: "approved" },
             required: false,
+            limit: 1000,
           },
           {
             model: Candle,
@@ -506,8 +538,10 @@ const obituaryController = {
             required: false,
           },
         ],
-        group: ["Obituary.id"],
+
+        // group: ["Obituary.id"],
       });
+
       if (!obituary) {
         console.warn("Obituary not found");
         return res

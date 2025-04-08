@@ -25,6 +25,24 @@ const condolenceController = {
           .status(httpStatus.BAD_REQUEST)
           .json({ error: `Invalid data format: ${error}` });
       }
+
+      const oneDayAgo = new Date();
+      oneDayAgo.setHours(oneDayAgo.getHours() - 24);
+
+      const recentCondolence = await Condolence.findOne({
+        where: {
+          userId,
+          obituaryId,
+          createdTimestamp: { [Op.gte]: oneDayAgo },
+        },
+        order: [["createdTimestamp", "DESC"]],
+      });
+
+      if (recentCondolence) {
+        return res.status(httpStatus.CONFLICT).json({
+          error: "You can only add a condolence once every 24 hours.",
+        });
+      }
       const status = isKeeper
         ? "approved"
         : isCustomMessage

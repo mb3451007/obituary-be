@@ -7,20 +7,25 @@ const candleController = {
       const { userId } = req.body;
       const obituaryId = req.params.id;
 
-      const ipAddress =
-        req.ip ||
-        req.headers["x-forwarded-for"] ||
-        req.connection.remoteAddress;
+      const ip =
+        req.headers["x-forwarded-for"]?.split(",")[0] ||
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress ||
+        req.ip;
+
+      const ipAddress = ip.includes("::ffff:") ? ip.split("::ffff:")[1] : ip;
 
       const lastBurned = await Candle.findOne({
         where: {
-          [Op.or]: [{ ipAddress: ipAddress }],
+          ipAddress: ipAddress,
           obituaryId: obituaryId,
           createdTimestamp: {
             [Op.gte]: moment().subtract(24, "hours").toDate(),
           },
         },
       });
+
+      console.log(lastBurned, "\n", ip, "\n", ipAddress);
 
       if (lastBurned) {
         return res

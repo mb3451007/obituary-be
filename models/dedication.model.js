@@ -75,7 +75,7 @@ const validateDedication = (dedication) => {
   const dedicationSchema = Joi.object({
     name: Joi.string().min(1).max(100).required(),
     title: Joi.string().max(25).required(),
-    message: Joi.string().max(500).required(),
+    message: Joi.string().max(10000).required(),
     status: Joi.string()
       .valid("pending", "approved", "rejected")
       .default("pending"),
