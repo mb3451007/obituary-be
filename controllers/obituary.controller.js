@@ -181,11 +181,17 @@ const obituaryController = {
         {
           model: User,
         },
+
         {
           model: Keeper,
+
+          required: false,
+          limit: 1000,
         },
         {
           model: SorrowBook,
+          required: false,
+          limit: 1000,
         },
         {
           model: Dedication,
@@ -484,8 +490,17 @@ const obituaryController = {
       const obituary = await Obituary.findByPk(obituaryId, {
         include: [
           User,
-          Keeper,
-          SorrowBook,
+          {
+            model: Keeper,
+
+            required: false,
+            limit: 1000,
+          },
+          {
+            model: SorrowBook,
+            required: false,
+            limit: 1000,
+          },
           {
             model: Dedication,
             where: { status: "approved" },
